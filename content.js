@@ -1,43 +1,46 @@
-// Store the state of videos that were playing before switching tabs
-let playingVideos = new Set();
+autopause = false;
+priority = null;
+let tabId = null;
 
-// Function to check if a video is playing
-function isVideoPlaying(video) {
-    return !!(
-        video &&
-        !video.paused &&
-        !video.ended &&
-        video.readyState > 2
-    );
-}
+// Get the tab ID once on load
+chrome.runtime.sendMessage({ action: "getTabId" }, (response) => {
+    if (response && response.tabId !== undefined) {
+        tabId = response.tabId;
+    }
+});
 
-// Function to pause all playing videos except prioritized ones
-function pausePlayingVideos() {
-    const videos = document.querySelectorAll('video');
-    playingVideos.clear(); // Clear the previous state
-    videos.forEach(video => {
-        if (isVideoPlaying(video) && !prioritizedVideos.has(video)) {
-            playingVideos.add(video); // Track videos that were playing
-            video.pause();
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "prioritizeTab") {
+        priority = message.tabId;
+    }
+
+    if (document.hidden && tabId !== null && tabId !== priority) {
+        const video = document.querySelector('video');
+        if (video && !video.paused) {
+          video.pause();
+          autopause = true;
         }
-    });
-}
+    }
+});
 
-// Function to resume only the videos that were playing before
-function resumePlayingVideos() {
-    playingVideos.forEach(video => {
-        if (video.paused) {
-            video.play();
-        }
-    });
-    playingVideos.clear(); // Clear the state after resuming
-}
+document.addEventListener('visibilitychange', function () {
+    const video = document.querySelector('video');
 
-// Listen for visibility change (tab switch)
-document.addEventListener('visibilitychange', () => {
+    if (!video) {
+        return;
+    }
+
     if (document.hidden) {
-        pausePlayingVideos(); // Pause videos when the tab is hidden
+        if (tabId !== null && tabId !== priority) {
+          if (!video.paused) {
+            video.pause();
+            autopause = true;
+          }
+        }
     } else {
-        resumePlayingVideos(); // Resume only the videos that were playing
+        if (autopause) {
+          video.play();
+          autopause = false;
+        }
     }
 });

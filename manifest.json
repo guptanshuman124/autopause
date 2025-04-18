@@ -1,13 +1,26 @@
 {
     "manifest_version": 3,
-    "name": "YouTube Auto Pause",
+    "name": "Autopause Extension",
     "version": "1.0",
-    "description": "Automatically pauses YouTube when you switch tabs.",
-    "permissions": ["tabs", "scripting"],
+    "description": "Pauses background tab videos, with manual pause detection and tab prioritization.",
+    "permissions": [
+      "tabs",
+      "storage",
+      "scripting"
+    ],
+    "host_permissions": [
+      "<all_urls>"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    },
     "content_scripts": [
-        {
-            "matches": ["<all_urls>"],
-            "js": ["content.js"]
-        }
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
     ]
   }
