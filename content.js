@@ -1,6 +1,5 @@
 autopause = false;
 priority = null;
-let tabId = null;
 
 // Get the tab ID once on load
 chrome.runtime.sendMessage({ action: "getTabId" }, (response) => {
